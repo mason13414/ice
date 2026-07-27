@@ -9,10 +9,11 @@ public class CommonCRI {
     // Close is close to goal (so usually higher x)
     // Outer is closer to driver wall (so usually higher y)
 
-    public static Pose toRedOffset = new Pose(2,-2.5); // red offset remember y is reversed
+    public static Pose toRedOffset = new Pose(-1,-3); // red offset remember y is reversed
     public static boolean wasLastRed = false;
     public static class TValues {
-        public static double fastInterpolationIntakeStart = 0.8;
+        public static double fastInterpolationIntakeStart = 0.75;
+        public static double fastInterpolationIntakeEnd = 0.85;
 
         public static double fastInterpolationIntakeStartFar = 0.5;
         public static double fastInterpolationIntakeEndFar = 0.65;
@@ -20,8 +21,8 @@ public class CommonCRI {
         public static double fastInterpolationSpikeShootStart = 0.6;
         public static double fastInterpolationSpikeShootEnd = 0.75;
 
-        public static double fastInterpolationLeverStart = 0.6;
-        public static double fastInterpolationLeverEnd = 0.7;
+        public static double fastInterpolationLeverStart = 0.55;
+        public static double fastInterpolationLeverEnd = 0.65;
 
         public static double fastInterpolationPreloadStart = 0.65;
         public static double fastInterpolationPreloadEnd = 0.8;
@@ -56,11 +57,13 @@ public class CommonCRI {
         public static Pose closeInner = new Pose(88.5, 59.8, Math.toRadians(-90)); // this is against the goal and wall, facing the obelisk
         public static Pose perpPrism = new Pose(87,27, Math.toRadians(180)); // this is against the prism, facing the gate
         public static Pose closeOuter = new Pose(64.55, 77.5, Math.toRadians(90)); // this is up against the goal and secret tunnel
-        public static Pose far = new Pose(-83.9,13, Math.toRadians(0));
+        public static Pose closeOuterFlipped = new Pose(67.05, 80, Math.toRadians(-90)); // this is up against the goal and secret tunnel
+        public static Pose far = new Pose(-83.9,15, Math.toRadians(0));
 
         static void convert(boolean toRed) {
             closeInner = convertToRed(closeInner, toRed, true);
             closeOuter = convertToRed(closeOuter, toRed, true);
+            closeOuterFlipped = convertToRed(closeOuterFlipped, toRed, true);
             perpPrism = convertToRed(perpPrism, toRed, true);
             far = convertToRed(far, toRed, true);
         }
@@ -69,32 +72,33 @@ public class CommonCRI {
     public static class IntakeBallPoses {
         public static Pose intakeSpike1ControlPointClose = new Pose(20.2,40.5, Math.toRadians(90));
         public static Pose intakeSpike1ControlPointFar = new Pose(15.3,31.6, Math.toRadians(90));
-        public static Pose intakeSpike1Start = new Pose(11.6,49.7, Math.toRadians(90));
+        public static Pose intakeSpike1Start = new Pose(11.6,45.5, Math.toRadians(90));
         public static Pose intakeSpike1End = new Pose(9,87, Math.toRadians(90));
 
         public static Pose intakeSpike2ControlPointClose = new Pose(-9.2,28, Math.toRadians(90));
         public static Pose intakeSpike2ControlPointFar = new Pose(-6.9,23.2, Math.toRadians(90));
-        public static Pose intakeSpike2Start = new Pose(-5.7,49.7, Math.toRadians(90));
-        public static Pose intakeSpike2End = new Pose(-9.4,87, Math.toRadians(90));
+        public static Pose intakeSpike2Start = new Pose(-7,49.7, Math.toRadians(90));
+        public static Pose intakeSpike2End = new Pose(-10.5,88, Math.toRadians(90));
 
         public static Pose intakeSpike3ControlPoint = new Pose(-24.9,36, Math.toRadians(90));
-        public static Pose intakeSpike3StartClose = new Pose(-29.6,49.7, Math.toRadians(90));
-        public static Pose intakeSpike3StartFar = new Pose(-33.2,49.7, Math.toRadians(90));
-        public static Pose intakeSpike3End = new Pose(-32.9,87, Math.toRadians(90));
+        public static Pose intakeSpike3StartClose = new Pose(-31.6,49.7, Math.toRadians(90));
+        public static Pose intakeSpike3StartFar = new Pose(-35.2,49.7, Math.toRadians(90));
+        public static Pose intakeSpike3End = new Pose(-34.9,87, Math.toRadians(90));
 
 
         public static Pose movingToPushLeverControlPoint = new Pose(11.6,59.9);
         public static Pose pushLeverAfterSpike1 = new Pose(16.1,75.8, Math.toRadians(90));
-        public static Pose pushLever = new Pose(9,83.25, Math.toRadians(63));
-        public static Pose pushLeverFromSTunnel = new Pose(4,80, Math.toRadians(63));
+        public static Pose pushLever = new Pose(12.75,85, Math.toRadians(63));
+        public static Pose pushLeverFromSTunnel = new Pose(13,83, Math.toRadians(50));
         public static Pose intakeFromSTunnel = new Pose(6, 75, Math.toRadians(45)); // pointing at ramp
 
-        public static Pose intakeSTunnelDiagonalStart = new Pose(-62.9,78.3, Math.toRadians(45));
-        public static Pose intakeSTunnelDiagonalEnd = new Pose(-11,78.3, Math.toRadians(45));
+        public static Pose intakeSTunnelDiagonalStart = new Pose(-62.9,82, Math.toRadians(45));
+        public static Pose intakeSTunnelDiagonalEnd = new Pose(-28,82, Math.toRadians(45));
 
-        public static Pose intakeHumanDiagonal = new Pose(-75,78, Math.toRadians(130));
-        public static Pose intakeHumanStrait = new Pose(-83,81.7, Math.toRadians(90));
-        public static Pose intakeHumanStraitControlPoint = new Pose(-87.8,23.5, Math.toRadians(90));
+        public static Pose intakeHumanDiagonal = new Pose(-79,78, Math.toRadians(130));
+        public static Pose intakeHumanStrait = new Pose(-85.5,85, Math.toRadians(90));
+        public static Pose intakeHumanStraitFlipped = new Pose(-85.5,-85, Math.toRadians(-90));
+        public static Pose intakeHumanStraitControlPoint = new Pose(-90,52, Math.toRadians(90));
 
         static void convert(boolean toRed) {
             intakeSpike1ControlPointClose = convertToRed(intakeSpike1ControlPointClose, toRed);
@@ -109,6 +113,7 @@ public class CommonCRI {
             intakeSpike3StartClose = convertToRed(intakeSpike3StartClose, toRed);
             intakeSpike3StartFar = convertToRed(intakeSpike3StartFar, toRed);
             intakeSpike3End = convertToRed(intakeSpike3End, toRed);
+            pushLeverFromSTunnel = convertToRed(pushLeverFromSTunnel, toRed);
             pushLeverAfterSpike1 = convertToRed(pushLeverAfterSpike1, toRed);
             pushLever = convertToRed(pushLever, toRed);
             movingToPushLeverControlPoint = convertToRed(movingToPushLeverControlPoint, toRed);
@@ -117,6 +122,8 @@ public class CommonCRI {
             intakeSTunnelDiagonalEnd = convertToRed(intakeSTunnelDiagonalEnd, toRed);
             intakeHumanDiagonal = convertToRed(intakeHumanDiagonal, toRed);
             intakeHumanStrait = convertToRed(intakeHumanStrait, toRed);
+            intakeHumanStraitFlipped = convertToRed(intakeHumanStraitFlipped, toRed);
+            intakeHumanStraitControlPoint = convertToRed(intakeHumanStraitControlPoint, toRed);
         }
     }
 
@@ -130,9 +137,9 @@ public class CommonCRI {
         public static Pose optimalSpike1StartClose = new Pose(30.9,35.3, Math.toRadians(150));
         public static Pose optimalSpike2StartClose = new Pose(24.7,29.5, Math.toRadians(160));
         public static Pose optimalSpike3StartClose = new Pose(24.1,25.9, Math.toRadians(170));
-        public static Pose optimalSpike1StartFar = new Pose(-27.7,12.5, Math.toRadians(30));
-        public static Pose optimalSpike2StartFar = new Pose(-27.7,12.5, Math.toRadians(30));
-        public static Pose optimalSpike3StartFar = new Pose(-33.2,16.4, Math.toRadians(90));
+        public static Pose optimalSpike1StartFar = new Pose(-27.7,17, Math.toRadians(30));
+        public static Pose optimalSpike2StartFar = new Pose(-27.7,17, Math.toRadians(45));
+        public static Pose optimalSpike3StartFar = new Pose(-33.2,18, Math.toRadians(90));
 
         public static Pose optimalRampStart = new Pose(36.9,42.6, Math.toRadians(140));
         public static Pose optimalHumanPlayerStart = new Pose(-67.9,26.4, Math.toRadians(100));

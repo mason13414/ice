@@ -298,7 +298,7 @@ public class MainTeleop {
         if (resetPoseGoal.startPress) {
             robot.reZeroAtGoal();
         } else if (resetPoseCorner.startPress) {
-            robot.reZeroAtCorner();
+            robot.reZeroAtGoalFlipped();
         }
 
         robot.setPanicShoot(panicShoot.isOn, fastShootButton.isOn);
@@ -312,6 +312,10 @@ public class MainTeleop {
             robot.climb();
         } else if (climb.endPress) {
             robot.storeClimber();
+        }
+
+        if (robot.readyToShootMotors()) {
+            gamepad1.rumble(50);
         }
 
         robot.setShooterOffset(rpmOffset, hoodAngleOffset);

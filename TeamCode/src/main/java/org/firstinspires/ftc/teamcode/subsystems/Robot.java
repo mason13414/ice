@@ -90,8 +90,8 @@ public class Robot {
     public Robot(Telemetry telemetry, HardwareMap hardwareMap, RobotSide robotSide, int startTurretTicks, double startIndexerTicks, BallColor[] ballsInIndexer) {
         follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
         Drawing.init();
-        Common.init(robotSide);
         CommonCRI.init(robotSide);
+        Common.init(robotSide);
         this.telemetry = telemetry;
         this.robotSide = robotSide;
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -186,6 +186,15 @@ public class Robot {
         farTurretOffset = 0;
     }
     public void reZeroAtGoal() {
+        offsetPose = new Pose();
+//        follower.setPose(goal.minus(new Pose(-48, 0)));
+        follower.setPose(CommonCRI.StartPoses.closeOuterFlipped);
+        closeDistanceOffset = 0;
+        closeTurretOffset = 0;
+        farDistanceOffset = 0;
+        farTurretOffset = 0;
+    }
+    public void reZeroAtGoalFlipped() {
         offsetPose = new Pose();
 //        follower.setPose(goal.minus(new Pose(-48, 0)));
         follower.setPose(CommonCRI.StartPoses.closeOuter);
@@ -386,7 +395,11 @@ public class Robot {
     }
 
     public boolean readyToShootMotors() {
-        return shooter.closeEnoughToTarget() && turret.closeEnoughToTarget(getCurrentPose()) && shooter.getRPM() > 100 && shooter.getUsePID();
+        if (ShapeDetection.isRobotInside(FieldShapes.closeTriangle, getCurrentPose())) {
+            return shooter.closeEnoughToTarget(false) && turret.closeEnoughToTarget(getCurrentPose()) && shooter.getRPM() > 100 && shooter.getUsePID();
+        } else {
+            return shooter.closeEnoughToTarget(true) && turret.closeEnoughToTarget(getCurrentPose()) && shooter.getRPM() > 100 && shooter.getUsePID();
+        }
     }
 
 
@@ -846,12 +859,16 @@ public class Robot {
         visionUpdate();
         lightsUpdate();
 
-        panelsTelemetry.addData("Rpm", shooter.getRPM());
-        panelsTelemetry.addData("Rpm Offset", rpmOffset);
-        panelsTelemetry.addData("Hood Angle", shooter.getHoodPosDeg());
-        panelsTelemetry.addData("Hood Offset", hoodAngleOffset);
-        panelsTelemetry.addData("Distance", distanceToGoal());
-        panelsTelemetry.update();
+//        panelsTelemetry.addData("Rpm", shooter.getRPM());
+//        panelsTelemetry.addData("error", shooter.shooterPID.getError());
+//        panelsTelemetry.addData("error+", Constants.Shooter.closeEnoughRPM * 2.5);
+//        panelsTelemetry.addData("error-", -Constants.Shooter.closeEnoughRPM);
+//        panelsTelemetry.addData("rpm target", shooter.getTargetRpm());
+//        panelsTelemetry.addData("rpm target+", shooter.getTargetRpm() + Constants.Shooter.closeEnoughRPM * 2.5);
+//        panelsTelemetry.addData("rpm target-", shooter.getTargetRpm() - Constants.Shooter.closeEnoughRPM);
+
+//        panelsTelemetry.addData("tf", (shooter.shooterPID.getError() < Constants.Shooter.closeEnoughRPM * 2.5 && shooter.shooterPID.getError() > Constants.Shooter.closeEnoughRPM) ? 1 : 0);
+//        panelsTelemetry.update();
 
         if (debug) {
             debug();

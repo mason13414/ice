@@ -661,8 +661,8 @@ public class Indexer {
         }
 
         // Update autoEndShootFast
-        if (dumbShootState1 && !dumbShootState2 && getEncoderPercentage() < 4.0 / 6.0) {
-            clearBallCells();
+        if (dumbShootState1 && !dumbShootState2 && getEncoderPercentage() < 5.0 / 6.0) {
+//            clearBallCells();
         }
 
         // once back at intake, stop shooting

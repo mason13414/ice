@@ -71,7 +71,7 @@ public class FromShootMidPos {
             // Path creation
             pathChainBuilder = robot.follower.pathBuilder()
                     .addPath(new BezierCurve(startPose, IntakeBallPoses.intakeSpike1ControlPointClose, IntakeBallPoses.intakeSpike1Start))
-                    .setFastHeadingInterpolation(TValues.fastInterpolationIntakeStart);
+                    .setFastHeadingInterpolation(TValues.fastInterpolationIntakeStart, TValues.fastInterpolationIntakeEnd);
 
             if (lever) {
                 pathChainBuilder.addPath(robot.follower.linearPathBuilder(IntakeBallPoses.intakeSpike1Start, IntakeBallPoses.pushLever));
@@ -374,7 +374,7 @@ public class FromShootMidPos {
             // Path creation
             pathChain = robot.follower.pathBuilder()
                     .addPath(new BezierCurve(startPose, IntakeBallPoses.intakeSpike3ControlPoint, IntakeBallPoses.intakeSpike3StartClose))
-                    .setFastHeadingInterpolation(TValues.fastInterpolationIntakeStart)
+                    .setFastHeadingInterpolation(TValues.fastInterpolationIntakeStart, TValues.fastInterpolationIntakeEnd)
                     .addPath(robot.follower.linearPathBuilder(IntakeBallPoses.intakeSpike3StartClose, IntakeBallPoses.intakeSpike3End))
                     .build();
             toShootPose = robot.follower.fastPathBuilder(IntakeBallPoses.intakeSpike3End, lastPose, TValues.fastInterpolationSpikeShootStart, TValues.fastInterpolationSpikeShootEnd, true);
@@ -492,7 +492,7 @@ public class FromShootMidPos {
             // Path creation
             pathChain = robot.follower.pathBuilder()
                     .addPath(new BezierCurve(startPose, IntakeBallPoses.intakeSpike3ControlPoint, IntakeBallPoses.intakeSpike3StartClose))
-                    .setFastHeadingInterpolation(TValues.fastInterpolationIntakeStart)
+                    .setFastHeadingInterpolation(TValues.fastInterpolationIntakeStart, TValues.fastInterpolationIntakeEnd)
                     .addPath(robot.follower.linearPathBuilder(IntakeBallPoses.intakeSpike3StartClose, IntakeBallPoses.intakeSpike3End))
                     .build();
             toShootPose = robot.follower.linearPathBuilder(IntakeBallPoses.intakeSpike3End, lastPose);
@@ -804,7 +804,7 @@ public class FromShootMidPos {
         @Override
         public void buildPaths() {
             toIntakeBalls = robot.follower.pathBuilder()
-                    .addPath(robot.follower.fastPathBuilder(startPose, IntakeBallPoses.intakeHumanDiagonal, TValues.fastInterpolationIntakeStart))
+                    .addPath(robot.follower.fastPathBuilder(startPose, IntakeBallPoses.intakeHumanDiagonal, TValues.fastInterpolationIntakeStart, TValues.fastInterpolationIntakeEnd))
                     .addPath(robot.follower.linearPathBuilder(IntakeBallPoses.intakeHumanDiagonal, IntakeBallPoses.intakeHumanStrait))
                     .build();
             if (parkAfter) {

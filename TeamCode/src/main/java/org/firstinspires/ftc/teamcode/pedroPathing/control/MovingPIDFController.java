@@ -132,7 +132,7 @@ public class MovingPIDFController {
     public void setTargetPosition(double set) {
         targetPosition = set;
 //        errorIntegral = 0;
-        error = targetPosition - position;
+            error = targetPosition - position;
     }
     // this is for when you need to adjust the position your going for by a little bit
     public void moveTargetPosition(double set) {

@@ -16,7 +16,7 @@ public class VisionSpline {
     public static final int STRENGTH = 4;
     public static final double zHeight = -69;
     public static final double zVel = -28;
-    public static final double zFree = 3;
+    public static final double zFree = 5;
     public static final double aRandomvariable = -85;
     /**
      * Main pipeline:
@@ -38,20 +38,27 @@ public class VisionSpline {
         List<Pose> poses = new ArrayList<>();
         poses.add(robotPose);
 
-        for (int i = 0; i < STRENGTH; i++) {
+        for (int i = 0; i < STRENGTH-2; i++) {
             if (firstBall.getX() > zHeight) {
-                poses.add(firstBall.plus(new Pose(zVel, Common.wasLastRed ? zFree : -zFree)));
+                poses.add(firstBall.plus(new Pose(0, Common.wasLastRed ? -zFree : zFree)));
             } else {
-                poses.add(new Pose(aRandomvariable, firstBall.getY(), firstBall.getHeading()));
+                poses.add(new Pose(aRandomvariable, firstBall.getY() + (Common.wasLastRed ? -zFree : zFree), firstBall.getHeading()));
             }
         }
-        
+        for (int i = 0; i < STRENGTH; i++) {
+            if (firstBall.getX() > zHeight) {
+                poses.add(firstBall.plus(new Pose(zVel, Common.wasLastRed ? -zFree : zFree)));
+            }
+        }
+
         if (secondBall != null) {
             for (int i = 0; i < STRENGTH; i++) {
                 if (secondBall.getX() > zHeight) {
-                    poses.add(secondBall.plus(new Pose(zVel, Common.wasLastRed ? zFree : -zFree)));
+                    poses.add(secondBall.plus(new Pose(zVel, Common.wasLastRed ? -zFree : zFree)));
                 } else {
-                    poses.add(new Pose(aRandomvariable, secondBall.getY(), secondBall.getHeading()));
+                    if (Math.abs(secondBall.getY()) < Math.abs(firstBall.getY()) || !(firstBall.getX() > zHeight || Math.abs(secondBall.getY()) < Math.abs(firstBall.getY()))) {
+                        poses.add(new Pose(aRandomvariable, secondBall.getY() + (Common.wasLastRed ? -zFree : zFree), secondBall.getHeading()));
+                    }
                 }
             }
         }
@@ -59,9 +66,12 @@ public class VisionSpline {
         if (thirdBall != null) {
             for (int i = 0; i < STRENGTH; i++) {
                 if (thirdBall.getX() > zHeight) {
-                    poses.add(thirdBall.plus(new Pose(zVel, Common.wasLastRed ? zFree : -zFree)));
+                    poses.add(thirdBall.plus(new Pose(zVel, Common.wasLastRed ? -zFree : zFree)));
                 } else {
-                    poses.add(new Pose(aRandomvariable, thirdBall.getY(), thirdBall.getHeading()));
+                    if (Math.abs(thirdBall.getY()) < Math.abs(firstBall.getY()) || !(firstBall.getX() > zHeight || Math.abs(thirdBall.getY()) < Math.abs(firstBall.getY()))) {
+                        poses.add(new Pose(aRandomvariable, thirdBall.getY() + (Common.wasLastRed ? -zFree : zFree), thirdBall.getHeading()));
+
+                    }
                 }
             }
         }

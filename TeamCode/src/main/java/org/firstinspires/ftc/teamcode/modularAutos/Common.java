@@ -51,8 +51,8 @@ public class Common {
         public static double notSpike1HightOut = 60;
 
         public static double shootVelocityClose = 3; // in / s
-        public static double shootVelocityFar = 2; // in / s
-        public static double shootAccelerationFar = 6; // in / s^2
+        public static double shootVelocityFar = 1; // in / s
+        public static double shootAccelerationFar = 5; // in / s^2
     }
     public static class DrivePower {
         public static double intake = 1;
@@ -61,6 +61,7 @@ public class Common {
     public static class StartPoses {
         public static Pose closeInner = new Pose(64.5, 35.8, Math.toRadians(-90)); // this is against the goal and wall, facing the obelisk
         public static Pose closeOuter = new Pose(40.55, 53.5, Math.toRadians(90)); // this is up against the goal and secret tunnel
+        public static Pose closeOuterFlipped = new Pose(40.55, 53.5, Math.toRadians(90)); // this is up against the goal and secret tunnel
         public static Pose far = new Pose(-64, 15.8, Math.toRadians(0));
         public static Pose reZeroAtCorner = new Pose(-52, -61, Math.toRadians(-90));
         public static Pose closePark = new Pose(12, 38, Math.toRadians(90));

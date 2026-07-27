@@ -754,7 +754,7 @@ public class FromShootFarPos {
                     }
                     break;
                 case 3:
-                    if (!robot.follower.isBusy()) {
+                    if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.2) {
                         if (sort) {
                             robot.indexer.setQueueGivenAttemptedRampOrder(robot.getMotif());
                         } else {
@@ -845,13 +845,13 @@ public class FromShootFarPos {
             // Path creation
             if (lever) {
                 toShootPose = robot.follower.pathBuilder()
-                        .addPath(robot.follower.fastPathBuilder(IntakeBallPoses.pushLever, IntakeBallPoses.intakeSTunnelDiagonalEnd, 0.8, 0.9, true))
+                        .addPath(robot.follower.fastPathBuilder(IntakeBallPoses.pushLeverFromSTunnel, IntakeBallPoses.intakeSTunnelDiagonalEnd, 0.8, 0.9, true))
                         .addPath(robot.follower.fastPathBuilder(IntakeBallPoses.intakeSTunnelDiagonalEnd, lastPose, TValues.fastInterpolationSpikeShootStart, TValues.fastInterpolationSpikeShootStart, true))
                         .build();
             } else {
                 toShootPose = robot.follower.fastPathChainBuilder(IntakeBallPoses.intakeSTunnelDiagonalEnd, lastPose, TValues.fastInterpolationSpikeShootStart, TValues.fastInterpolationSpikeShootStart, true);
             }
-            panicPath = robot.follower.fastPathBuilder(IntakeBallPoses.pushLever, ShootPoses.distantShoot, TValues.fastInterpolationPreloadStart, TValues.fastInterpolationPreloadEnd);
+            panicPath = robot.follower.fastPathBuilder(IntakeBallPoses.pushLeverFromSTunnel, ShootPoses.distantShoot, TValues.fastInterpolationPreloadStart, TValues.fastInterpolationPreloadEnd);
         }
 
         @Override
@@ -907,7 +907,7 @@ public class FromShootFarPos {
                     }
                     break;
                 case 3:
-                    if (pathTimer.getElapsedTimeSeconds() > 2.5 && !once) {
+                    if (pathTimer.getElapsedTimeSeconds() > 3 && !once) {
                         robot.follower.followPath(panicPath);
                         once = true;
                     }
