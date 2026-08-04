@@ -76,7 +76,7 @@ public class Intake {
         this.climbed = climbed;
     }
 
-    public void update(boolean spitIntake, boolean isIntaking, boolean isShooting, boolean forceSpit, boolean allowIntaking, boolean isPlugged, boolean intakeOverride) {
+    public void update(boolean spitIntake, boolean isIntaking, boolean isShooting, boolean forceSpit, boolean allowIntaking, boolean isPlugged, boolean intakeOverride, boolean demo) {
         if (climbed) {
             setIntakeServoPower(0);
             setIntakeMotorPower(0);
@@ -92,8 +92,13 @@ public class Intake {
             intakeMotor(true);
             intakeServo(true);
         } else if (isShooting){
-            setIntakeMotorPower(Constants.Intake.intakeMotorOffPower);
-            intakeServo(true);
+            if (!demo) {
+                setIntakeMotorPower(Constants.Intake.intakeMotorOffPower);
+                intakeServo(true);
+            } else {
+                intakeMotor(false);
+                intakeServo(false);
+            }
         } else {
             setIntakeMotorPower(Constants.Intake.intakeMotorLightSpit);
             intakeServo(false);

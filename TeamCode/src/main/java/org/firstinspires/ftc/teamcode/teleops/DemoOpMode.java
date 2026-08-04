@@ -216,7 +216,7 @@ public class DemoOpMode {
         queuePurple.checkStatus(purple && smartShoot.isOn);
 
         autoShoot.checkStatus(gamepad1.a); // Toggle to turn on auto shoot
-        fastShootButton.checkStatus(gamepad1.b);// press to shoot 3
+        fastShootButton.checkStatus(gamepad1.b || (gamepad2.b && !(gamepad1.left_stick_button || gamepad1.right_stick_button)));// press to shoot 3
         smartShoot.checkStatus(gamepad1.ps); // Toggle to turn on smart shoot
 
         overrideIntake.checkStatus(gamepad1.left_trigger_pressed); // hold to turn on ignore allowintaking
@@ -246,7 +246,7 @@ public class DemoOpMode {
         }
 
         if (!brake.isOn) {
-            if ((Math.abs(gamepad1.left_stick_y) > 0.01) || (Math.abs(gamepad1.left_stick_x) > 0.01) || (Math.abs(gamepad1.right_stick_x) > 0.01)){
+            if ((Math.abs(gamepad1.left_stick_y) > 0.01) || (Math.abs(gamepad1.left_stick_x) > 0.01) || (Math.abs(gamepad1.right_stick_x) > 0.01 || gamepad1.right_stick_button || gamepad1.left_stick_button)){
                 robot.drivetrain.teleopMovement(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, true);
                 robot.notBrakeDriveTrain();
             } else {
@@ -314,7 +314,7 @@ public class DemoOpMode {
         if (autoShoot.isOn && !climb.isOn) {
             robot.prepareShooter(ShotType.TABLE, (!brake.isOn || brakeAllowSotfIsOn) && sotfIsOn, swapGoal.isOn, false);
         } else if (autoShoot.endPress || climb.startPress) {
-            robot.casualShooterModeOn();
+            robot.casualShooterModeOn(true);
         }
         if (unjamSpindexer.startPress) {
             robot.indexerUnjam();

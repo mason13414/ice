@@ -412,7 +412,14 @@ public class Robot {
     }
 
     public void casualShooterModeOn() {
-        turret.setTargetDeg(150);
+        casualShooterModeOn(false);
+    }
+    public void casualShooterModeOn(boolean demo) {
+        if (!demo) {
+            turret.setTargetDeg(150);
+        } else {
+            turret.setTargetDeg(0);
+        }
         shooter.casualModeOn();
     }
 
@@ -616,10 +623,10 @@ public class Robot {
     public void spinIntake(boolean set) {
         isIntaking = set;
     }
-    boolean teleopSpit = false; 
+    boolean teleopSpit = false;
     boolean intakeInit = false;
 
-    public void intakeUpdate() {
+    public void intakeUpdate(boolean demo) {
         // don't spin until robot is started
         if (!intakeInit && isIntaking) {
             intakeInit = true;
@@ -629,7 +636,7 @@ public class Robot {
         }
 
         boolean dontAllowIntaking = indexer.shooting && intake.isBeamBroken();
-        intake.update(spitIntake || isIndexerUnjamming(), isIntaking, indexer.shooting, indexer.doSpit() || teleopSpit, indexer.allowIntaking() && !dontAllowIntaking, indexer.isPlugged(), intakeOverride);
+        intake.update(spitIntake || isIndexerUnjamming(), isIntaking, indexer.shooting, indexer.doSpit() || teleopSpit, indexer.allowIntaking() && !dontAllowIntaking, indexer.isPlugged(), intakeOverride, demo);
     }
 
 
@@ -846,13 +853,16 @@ public class Robot {
     double previousTime;
     double maxHoodAngleChange;
     public void update(boolean debug) {
+        update(debug, false);
+    }
+    public void update(boolean debug, boolean demo) {
 
         for (LynxModule hub : hubs) {
             hub.clearBulkCache();
         }
 
         shooterUpdate();
-        intakeUpdate();
+        intakeUpdate(demo);
         spindexerUpdate();
         turretUpdate();
         follower.update();
