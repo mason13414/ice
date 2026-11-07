@@ -23,12 +23,14 @@ public class Common {
         // TODO: the positions the robot shoots from.
         public static final Pose blueMidShoot = new Pose(0, 0, 0);
         public static final Pose redMidShoot = new Pose(0, 0, 0);
+        public static final Pose redFarShoot = new Pose(0, 0, 0);
     }
 
     public static class IntakePoses {
         // TODO: where the robot picks game elements up.
         public static final Pose blueSpike1 = new Pose(0, 0, 0);
         public static final Pose redSpike1 = new Pose(0, 0, 0);
+        public static final Pose redFarSpike = new Pose(0, 0, 0);
     }
 
     public static class Timings {
