@@ -1,189 +1,98 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.math.Pose;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.control.KalmanFilterParameters;
-import org.firstinspires.ftc.teamcode.pedroPathing.control.PIDFCoefficients;
-import org.firstinspires.ftc.teamcode.pedroPathing.control.PIDFController;
-import org.firstinspires.ftc.teamcode.pedroPathing.geometry.Pose;
-import org.firstinspires.ftc.teamcode.util.RGBColors;
-
+/**
+ * Robot-specific numbers that are NOT part of Pedro Pathing.
+ * <p>
+ * Every value here is a clean default for the brand-new BioBuzz robot. None of last
+ * season's tuned numbers were copied over, because the robot, motors and mechanisms
+ * are all different. Anything that must be measured on the real robot is marked TODO.
+ */
 public class Constants {
 
     public static class Drivetrain {
+        /**
+         * Four 6000 RPM bare motors, 9T -> 108T (12:1), 104 mm wheels.
+         * 500 RPM output * (pi * 104 mm) = about 107 in/s of free speed.
+         * This is only documentation: Pedro 3 measures the real value during AutoTune.
+         */
+        public static final double OUTPUT_RPM = 500.0;
+        public static final double GEAR_RATIO = 108.0 / 9.0;
+        public static final double WHEEL_DIAMETER_MM = 104.0;
+        public static final double FREE_SPEED_IN_PER_SEC = 107.0; // TODO: confirm with AutoTune
 
-        public static double notTurboPower = 0.6;
-        public static double turboPower = 1;
-
-        public static PIDFController stopPID = new PIDFController(new PIDFCoefficients(
-                0.035,
-                0.0,
-                0.0,
-                0.0
-        ));
-        public static PIDFController turnPID = new PIDFController(error -> new PIDFCoefficients(
-                0.15,
-                0.0,
-                0.0,
-                0.0
-        ));
-    }
-    public static class Indexer {
-
-        public static double indexerTolerance = 0.07;
-        public static double wideIndexerTolerance = 0.14;
-        public static double transferPower = 1;
-        public static double smartShootSpacingSec = 0.6;
-
-        public static double indexerPlugDistance = 5; //inches
+        /** Driver slow mode. 1.0 is full speed. */
+        public static final double NOT_TURBO_POWER = 0.6;
+        public static final double TURBO_POWER = 1.0;
     }
 
     public static class Intake {
-        public static double intakeMotorPower = 1;
-        public static double intakeMotorOffPower = -0.2;
-        public static double intakeMotorPluggedPower = 0.04;
-        public static double intakeMotorLightSpit = -0.3;
-        public static double spitMotorPower = -0.67; //67 67 67 67 67 67 67 67 67 67
+        /** 1.0 runs the intake in, negative spits out. TODO: tune on the robot. */
+        public static final double INTAKE_POWER = 1.0;
+        public static final double SPIT_POWER = -0.7;
+    }
 
-        public static double intakeServoPower = 1;
-        public static double intakeServoOffPower = 0.2;
-        public static double spitServoPower = -1;
+    public static class Feed {
+        /** Pushes the game element into the flywheel. TODO: tune on the robot. */
+        public static final double FEED_POWER = 1.0;
+        public static final double SPIT_POWER = -1.0;
+    }
 
-        public static double spitTime = 0.3;
+    public static class Shooter {
+        /**
+         * Encoder counts per revolution of the flywheel motor shaft.
+         * 28 is the goBILDA 5203 value; TODO: confirm which motor is on the flywheel.
+         */
+        public static final double TICKS_PER_REV = 28.0;
+
+        /** Flywheel speed while shooting. TODO: build the distance -> RPM table on the robot. */
+        public static final double NEAR_RPM = 0.0;
+        public static final double FAR_RPM = 0.0;
+
+        /** How close the flywheel must be to its target before we trust a shot. */
+        public static final double RPM_TOLERANCE = 75.0;
+
+        /** The hood is fixed this year (no hood servo), so this is only documentation. */
+        public static final double FIXED_HOOD_ANGLE_DEG = 0.0; // TODO: measure the real hood angle
+    }
+
+    public static class Turret {
+        /** Encoder counts per revolution of the turret motor shaft. TODO: confirm motor. */
+        public static final double TICKS_PER_REV = 28.0;
+        /** Motor revolutions per turret revolution. TODO: measure the real gear ratio. */
+        public static final double GEAR_RATIO = 1.0;
+
+        /** Simple proportional gain. TODO: tune on the robot. */
+        public static final double KP = 0.02;
+        /** Minimum power to break friction. TODO: tune on the robot. */
+        public static final double KS = 0.0;
+
+        public static final double MAX_POWER = 0.5;
+        /** Stop correcting inside this many degrees. */
+        public static final double TOLERANCE_DEG = 0.75;
+
+        /** Software limit so a mis-aimed target cannot wrap the turret. TODO: measure limits. */
+        public static final double MIN_ANGLE_DEG = -180.0;
+        public static final double MAX_ANGLE_DEG = 180.0;
+    }
+
+    public static class Field {
+        /**
+         * Where the turret should aim, in Pedro field coordinates (inches, blue-origin).
+         * TODO: set the real BioBuzz goal position; aiming is skipped until then.
+         */
+        public static final Pose GOAL = Pose.zero();
+        public static final boolean GOAL_CONFIGURED = false;
     }
 
     public static class Vision {
-        public static int configTest = 0;
-
-        public static Pose redGoal = new Pose(85.5, -87.5);
-        public static Pose blueGoal = new Pose(82, 78);
-        public static Pose bluePrism = new Pose(85, 14);
-        public static Pose redPrism = new Pose(86.5, -14);
-        public static Pose redGoalSort = new Pose(65, -66);
-        public static Pose blueGoalSort = new Pose(65.5, 54);
-
-//        public static Pose redGoalPhysics = new Pose(64, -67);
-//        public static Pose blueGoalPhysics = new Pose(67, 67);
-
-        public static Pose redGoalAimOffset = new Pose(0, 0);
-        public static Pose blueGoalAimOffset = new Pose(0, 0);
+        /**
+         * Extra offset applied to the AprilTag pose if the camera is not where last
+         * season's camera was. TODO: measure on the new robot.
+         */
+        public static final Pose TAG_POSE_OFFSET = new Pose(0, 0);
+        /** How many camera frames to average when re-localizing. */
+        public static final int RELOCALIZE_SAMPLES = 10;
     }
-
-    @Configurable
-    public static class Turret {
-        public static double closeEnough = 8; //Inches
-        public static double turretOffset = 0;
-
-//        public static double P = 0;
-//        public static double I = 0;
-//        public static double D = 0;
-//
-        public static double P = .006;
-        public static double I = 0;
-        public static double D = 0.0005;
-
-        public static double CCW_F = -0.04;
-        public static double CW_F = 0.087;
-        public static double CableCW_F = -0.08;
-        public static double kV = .04;
-        public static double kA = -.07;
-        public static double Cable_kV = .08;
-        public static double Cable_kP = .002;
-
-
-
-        public static PIDFCoefficients turretPID = new PIDFCoefficients(P, I, D, 1);
-//        public static PIDFCoefficients turretPID = new PIDFCoefficients(0, 0, 0, 1);
-    }
-
-    @Configurable
-    public static class Shooter {
-        public static KalmanFilterParameters kalmanFilterParameters = new KalmanFilterParameters(0.01, 0.1);
-        public static PIDFCoefficients shooterVelocityPID = new PIDFCoefficients(.0025, 0, 0, .08024);
-//        public static PIDFCoefficients shooterVelocityPID = new PIDFCoefficients(0, 0, 0, 0);
-        public static double kV = 5232;
-        public static double RPMoffset = 0;
-        public static double hoodAngleOffset = 0;
-        public static double closeEnoughRPM = 50;
-        public static double ticksPerRevolution = 28;
-        public static double minHoodAngle = 14.3;
-        public static double maxHoodAngle = 46;
-
-        public static double entryAngle = Math.toRadians(-30);
-        public static double entryHeight = 34;
-        public static double setRPM = 0;
-        public static double setHood = 0;
-    }
-    public static class Climber {
-        public static double climbedPosition = 0.445;
-        public static double storedPosition = 0.1;
-    }
-    public static class Color {
-        // High to low
-        public static RGBColors[] greenColorOrder  = {RGBColors.Green, RGBColors.Blue, RGBColors.Red};
-        public static RGBColors[] purpleColorOrder = {RGBColors.Blue, RGBColors.Green, RGBColors.Red};
-
-        public static double brushLandsDist = 80;
-        public static double i2cDist = 1.07;
-
-//        Prev Method (Dont use)
-//        public static double[] green = {0.0269, 0.0792, 0.06, 0.9551}; //0.743
-//        public static double[] greenFar = {0.0147, 0.0361, 0.0274, 0.978}; //1.95
-//        public static double[] greenWeird = {0.0157, 0.0414, 0.0313, 0.9828}; //4.7
-//        public static double[] greenFakeHole = {-1, -1, -1, -1}; //0.0
-//
-//        public static double[] purple = {0.062, 0.0719, 0.0898, 0.9973}; //0.48
-//        public static double[] purpleFar = {0.0229, 0.0302, 0.0324, 0.9816}; //1.73
-//        public static double[] purpleWeird = {0.0666, 0.0763, 0.0966, 0.9976}; //0.62
-//
-//        public static double[] none = {0.012, 0.0271, 0.02, 0.9622}; //6
-
-
-        // Dirty Sensor
-//        public static double[] red =    {1.992, 1.719, 1, 0.314}; //0
-//        public static double[] orange = {2.278, 2.352, 1, 0.362}; //0
-//        public static double[] yellow = {1.776, 3.502, 1, 0.741}; //0
-//        public static double[] green =  {0.434, 1.598, 1, 0.266}; //0.743
-//        public static double[] blue =   {0.205, 0.511, 1, 0.332}; //0
-//        public static double[] purple = {0.497, 0.789, 1, 0.309}; //0.48
-        // Clean Sensor
-        public static double[] red =    {1.852, 1.379, 1, 0.436}; //0
-        public static double[] orange = {2.029, 1.887, 1, 0.459}; //0
-        public static double[] yellow = {1.571, 2.745, 1, 0.783}; //0
-        public static double[] green =  {0.332, 1.245, 1, 0.464}; //0.743
-        public static double[] blue =   {0.169, 0.387, 1, 0.417}; //0
-        public static double[] purple = {0.416, 0.574, 1, 0.486}; //0.48
-
-
-//      with orange tape
-//        public static double[] green = {0.209, 0.4111, 0.1952, 0.9998}; //0.583
-//        public static double[] greenFar = {0.1937, 0.3655, 0.182, 0.9998}; //1.95
-//        public static double[] greenFakeHole = {0.1997, 0.3869, 0.189, 0.9998}; //0.63
-//        public static double[] greenWeird = {-1, -1, -1, -1}; //
-//
-//        public static double[] purple = {0.223, 0.384, 0.1855, 0.9998}; //0.88
-//        public static double[] purpleFar = {0.199, 0.365, 0.1813, 0.9998}; //2.07
-//        public static double[] purpleWeird = {0.1954, 0.362, 0.1813, 0.9997}; //2.22
-//
-//        public static double[] none = {0.1922, 0.359, 0.1792, 0.9997}; //3.1
-//        public static double[] none2 = {-1, -1, -1, -1}; // unused
-
-        public static double backDst = 2.2;
-    }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

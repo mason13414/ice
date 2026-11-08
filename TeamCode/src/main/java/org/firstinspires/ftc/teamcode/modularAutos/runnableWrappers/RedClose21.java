@@ -1,187 +1,96 @@
 package org.firstinspires.ftc.teamcode.modularAutos.runnableWrappers;
 
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.utils.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.modularAutos.Common;
 import org.firstinspires.ftc.teamcode.modularAutos.PathPlanner;
 import org.firstinspires.ftc.teamcode.modularAutos.modules.Commands;
-import org.firstinspires.ftc.teamcode.modularAutos.modules.FromShootFarPos;
-import org.firstinspires.ftc.teamcode.modularAutos.modules.FromShootMidPos;
-import org.firstinspires.ftc.teamcode.modularAutos.modules.FromStartClosePos;
-import org.firstinspires.ftc.teamcode.modularAutos.modules.FromStartFarPos;
-import org.firstinspires.ftc.teamcode.pedroPathing.geometry.Pose;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 import org.firstinspires.ftc.teamcode.subsystems.Robot;
-import org.firstinspires.ftc.teamcode.util.BallColor;
-import org.firstinspires.ftc.teamcode.util.EndValuesStorer;
-import org.firstinspires.ftc.teamcode.util.FieldShapes;
-import org.firstinspires.ftc.teamcode.util.RobotSide;
-import org.firstinspires.ftc.teamcode.util.ShapeDetection;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Structural template, ported from last season's RedClose21.
+ * <p>
+ * The SHAPE is what was kept: a wrapper OpMode owns a list of steps, builds the
+ * current step's paths, runs it, and advances when it reports done, with a hard
+ * timeout just before the 30 second mark.
+ * <p>
+ * The CONTENT could not survive: the old auto queued 21 balls through the indexer
+ * and the smart-shoot color logic, and neither exists on this robot. What is left is
+ * drive -> spin up -> drive -> spin up, with all poses as TODO placeholders.
+ */
 @Autonomous(name = "Red Close 21", group = "0Comp", preselectTeleOp = "Main Teleop Red")
 public class RedClose21 extends OpMode {
-    Pose startPose;
-    RobotSide robotSide;
-    Robot robot;
-    TelemetryManager panelsTelemetry;
 
-    private List<PathPlanner> steps = new ArrayList<>();
-    Timer zeroVelocityTimer = new Timer(2000000);
+    private final List<PathPlanner> steps = new ArrayList<>();
+    private final Timer timer = new Timer();
+    private Robot robot;
     private int currentStep = 0;
-    private boolean parkPathFollowed = false;
-    private double lastTime = 2000000000;
 
     @Override
     public void init() {
-        robotSide = RobotSide.Red;
-        robot = new Robot(telemetry, hardwareMap, robotSide, 0,0,
-                new BallColor[]{
-                        BallColor.Green,
-                        BallColor.Purple,
-                        BallColor.Purple
-                });
-        startPose = Common.StartPoses.closeOuter;
+        robot = new Robot(hardwareMap, telemetry);
 
-        steps.add(new FromStartClosePos.ShootAndGoToMidShootPosFast(robot, lastPlanner()));
-        steps.add(new FromShootMidPos.ToIntakeSpike2(robot, lastPlanner(), false, false, false));
-        steps.add(new FromShootMidPos.ToIntakeFromRamp(robot, lastPlanner(), false, false, true));
-        steps.add(new FromShootMidPos.ToIntakeFromRamp(robot, lastPlanner(), false, false, true));
-        steps.add(new FromShootMidPos.ToIntakeFromRamp(robot, lastPlanner(), false, false, true));
-        steps.add(new FromShootMidPos.ToIntakeFromRamp(robot, lastPlanner(), false, false, true));
-        steps.add(new FromShootMidPos.ToIntakeSpike1(robot, lastPlanner(), false, true, false));
+        PathPlanner previous = new Commands.NullPlanner(Common.StartPoses.redCloseOuter);
+        previous = add(new Commands.GoToPose(robot, previous, Common.ShootPoses.redMidShoot));
+        previous = add(new Commands.Shoot(robot, previous, 1.0));
+        previous = add(new Commands.GoToPose(robot, previous, Common.IntakePoses.redSpike1));
+        previous = add(new Commands.GoToPose(robot, previous, Common.ShootPoses.redMidShoot));
+        add(new Commands.Shoot(robot, previous, 1.0));
 
-        wComms(steps);
-
-        robot.follower.setPose(startPose);
-        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+        telemetry.addData("auto", "Red Close 21 (template)");
+        telemetry.addData("start pose", Common.StartPoses.redCloseOuter);
     }
 
-    @Override
-    public void init_loop() {
-        telemetry.addData("start pose", startPose);
-        telemetry.addData("shoot pose", Common.ShootPoses.midShoot);
-        telemetry.addData("Is Red", Common.wasLastRed);
-        telemetry.addLine("=== Motif ===");
-        BallColor[] motif = robot.getMotif(true);
-        if (motif == null) {
-            motif = new BallColor[]{BallColor.None, BallColor.None, BallColor.None};
-        }
-        for (BallColor color : motif) {
-            telemetry.addLine(color.name());
-        }
-
-        telemetry.update();
+    private PathPlanner add(PathPlanner step) {
+        steps.add(step);
+        return step;
     }
 
     @Override
     public void start() {
         robot.start();
-        steps.get(currentStep).buildPaths();
-        robot.spinIntake();
-        lastTime = System.nanoTime();
-        robot.setPipelineIndex(2);
+        robot.setPose(Common.StartPoses.redCloseOuter);
+        robot.intake.run();
+        timer.reset();
+        if (!steps.isEmpty()) {
+            steps.get(0).buildPaths();
+        }
     }
 
-    boolean firstDeInit = false;
     @Override
     public void loop() {
-        // to stop the auto
-        if (robot.getOpmodeTimeSeconds() > 30) {
-            telemetry.addData("Done", true);
-            telemetry.addData("Time ", 2 - zeroVelocityTimer.getElapsedTimeSeconds());
+        if (currentStep >= steps.size() || timer.seconds() > Common.Timings.AUTO_TIMEOUT_SECONDS) {
+            robot.stopAll();
+            telemetry.addData("done", true);
             telemetry.update();
-
-            robot.stopAllSubsystems();
-            if (robot.follower.getVelocity().getMagnitude() > 0.5 || !firstDeInit) {
-                firstDeInit = true;
-                zeroVelocityTimer.resetTimer();
-            }
-            if (zeroVelocityTimer.getElapsedTimeSeconds() > 2) {
-                requestOpModeStop();
-            }
             return;
         }
 
         robot.update();
 
-        if (!parkPathFollowed && robot.getOpmodeTimeSeconds() > 29.5 && ShapeDetection.doesRobotCrossLine(FieldShapes.closeTriangle, robot.getCurrentPose().plusVector(robot.follower.getVelocity(), 0.75))) {
-            if (robot.inShootingZone()) {
-                robot.indexer.shootAll();
-            }
-            robot.doSmartShoot(false);
-            if (robot.getCurrentPose().getX() > - 25) {
-                robot.follower.followPath(robot.follower.linearPathBuilder(Common.ShootPoses.parkShoot, Common.IntakeBallPoses.intakeSpike2Start));
-            } else {
-                robot.follower.followPath(robot.follower.linearPathBuilder(Common.ShootPoses.farShoot, Common.IntakeBallPoses.intakeSpike3StartFar));
-            }
-            parkPathFollowed = true;
-            return;
-        } else if (parkPathFollowed) {
-            return;
-        }
-
-
-        // Stops the robot if done
-        if (currentStep >= steps.size()) {
-            telemetry.addData("Done", true);
-            telemetry.update();
-            return;
-        }
-        robot.prepareShooter(steps.get(currentStep).useSOTF());
-
         PathPlanner step = steps.get(currentStep);
-        boolean done = step.run();
-
-        if (done) {
+        if (step.run()) {
             currentStep++;
-            if (currentStep >= steps.size()) {
-                return;
+            if (currentStep < steps.size()) {
+                steps.get(currentStep).buildPaths();
             }
-            steps.get(currentStep).buildPaths();
+            return;
         }
 
-//        Drawing.drawDebug(robot.follower);
-//        Drawing.drawShapesDebug(robot.follower);
-//        telemetry.addData("time", robot.getOpmodeTimeSeconds());
-//        telemetry.addData("name", step);
-//        for (BallColor i : robot.indexer.getBallCells()) {
-//            telemetry.addData("hasBalls", i);
-//        }
-
-    }
-
-    private PathPlanner lastPlanner() {
-        if (steps.isEmpty()) {
-            return new Commands.nullPlanner(startPose);
-        } else {
-            return steps.get(steps.size() - 1);
-        }
-    }
-
-    private void wComms(List<PathPlanner> steps) {
-        Pose lastOptimalPose = null;
-        for (int i = steps.size() - 1; i >= 0; i--) {
-            PathPlanner planner = steps.get(i);
-            if (!planner.hasComms()) {
-                lastOptimalPose = null;
-                continue;
-            }
-            if (lastOptimalPose != null) {
-                planner.setOptimalEndPose(lastOptimalPose);
-            }
-            lastOptimalPose = planner.getOptimalStartPose();
-        }
+        telemetry.addData("step", "%d/%d %s", currentStep + 1, steps.size(), step.name());
+        telemetry.addData("pose", "x %.1f  y %.1f  heading %.1f deg",
+                robot.getPose().x(), robot.getPose().y(), Math.toDegrees(robot.getPose().heading()));
+        telemetry.addData("time", "%.1f s", timer.seconds());
+        telemetry.update();
     }
 
     @Override
     public void stop() {
-        EndValuesStorer endValuesStorer = new EndValuesStorer();
-        endValuesStorer.saveEndValues(robot.getCurrentPose().getX(), robot.getCurrentPose().getY(), robot.getCurrentPose().getHeading(), robot.turret.getTicks(), robot.indexer.getEncoderPercentage());
+        robot.stopAll();
     }
 }

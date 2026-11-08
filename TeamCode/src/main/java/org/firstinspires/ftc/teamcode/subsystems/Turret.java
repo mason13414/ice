@@ -1,171 +1,93 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.CRServo;
+import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.pedroPathing.control.PIDFCoefficients;
-import org.firstinspires.ftc.teamcode.pedroPathing.control.PIDFController;
-import org.firstinspires.ftc.teamcode.pedroPathing.geometry.Pose;
-import org.firstinspires.ftc.teamcode.util.RobotSide;
 
+/**
+ * Turret driven by a single motor this year (last year it was two CR servos).
+ * <p>
+ * Because it is a motor, our own motor encoder is the angle sensor. Last season's
+ * angle came from the transfer motor's encoder, which no longer exists — this is the
+ * one hardware change that genuinely required rewriting a subsystem.
+ */
 public class Turret {
-    // declaring motor variables
-    CRServo turretServo1;
-    CRServo turretServo2;
-    public int encoderOffset = 12830;
 
-    Pose goalPose;
+    private final DcMotorEx motor;
 
-    public final DcMotorEx encoder;
-    private static final int TICKS_PER_REV = 4096;
-    private static final double GEAR_RATIO = 6.25;
+    /** Ticks read at the moment the turret was last zeroed against its hard stop. */
+    private double offsetTicks = 0;
+    private double targetDeg = 0;
 
-    public PIDFController turretPID;
-    public PIDFController secondaryTurretPIDF;
-
-    public Turret(HardwareMap hardwareMap, int startTurretTicks, RobotSide robotSide){
-
-        turretServo1 = hardwareMap.get(CRServo.class, "turret1");
-        turretServo1.setDirection(CRServo.Direction.FORWARD);
-
-        turretServo2 = hardwareMap.get(CRServo.class, "turret2");
-        turretServo2.setDirection(CRServo.Direction.FORWARD);
-
-        encoder = hardwareMap.get(DcMotorEx.class, "transfer");
-        reZero();
-
-        encoderOffset += startTurretTicks;
-
-        turretPID = new PIDFController(Constants.Turret.turretPID);
-        turretPID.updateFeedForwardInput(Constants.Turret.CW_F);
-        turretPID.setTargetPosition(ticksToDegrees(encoderOffset));
-        if (robotSide == RobotSide.Blue) {
-            goalPose = new Pose(72, 72);
-        } else {
-            goalPose = new Pose(72, -72);
-        }
+    public Turret(HardwareMap hardwareMap) {
+        motor = hardwareMap.get(DcMotorEx.class, "turret1");
+        motor.setDirection(DcMotorSimple.Direction.FORWARD); // TODO: confirm which way is positive
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    public void reZero() {
-        encoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        encoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    /** Call with the turret resting against its hard stop: that position becomes 0 degrees. */
+    public void zero() {
+        offsetTicks = motor.getCurrentPosition();
+        targetDeg = 0;
+        motor.setPower(0);
+    }
+
+    public double getTicks() {
+        return motor.getCurrentPosition() - offsetTicks;
+    }
+
+    public double getAngleDeg() {
+        double revolutions = getTicks() / (Constants.Turret.TICKS_PER_REV * Constants.Turret.GEAR_RATIO);
+        return revolutions * 360.0;
     }
 
     public void setTargetDeg(double deg) {
-        double robotDeg = 180 - deg;
-        robotDeg = closestTargetAngle(robotDeg);
-        while (robotDeg > 360) {
-            robotDeg -= 360;
-        }
-        while (robotDeg < -45) {
-            robotDeg += 360;
-        }
-
-        turretPID.setTargetPosition(robotDeg + Constants.Turret.turretOffset);
-    }
-    private double closestTargetAngle(double targetDeg) {
-        double currentDeg = curAngle;
-        // normalize target into [0,360)
-        targetDeg %= 360.0;
-        if (targetDeg < 0) targetDeg += 360.0;
-
-        // find shortest delta in [-180,180)
-        double delta = targetDeg - (currentDeg % 360.0);
-        delta = (delta + 540.0) % 360.0 - 180.0;
-
-        // shift target so it lives near the current angle
-        return currentDeg + delta;
-    }
-    public void setTargetRad(double rad) {
-        setTargetDeg(Math.toDegrees(rad));
-    }
-    public void update(double angVel) {
-        update(angVel, 0, 1);
-    }
-    public void update(double angVel, double angAccel) {
-        update(angVel, angAccel, 1);
+        targetDeg = clamp(deg, Constants.Turret.MIN_ANGLE_DEG, Constants.Turret.MAX_ANGLE_DEG);
     }
 
-    double curAngle = 0;
-    double previousAngle = 0;
-    double previousTime = System.nanoTime() * 1e-9;
-    double curTime = System.nanoTime() * 1e-9;
-    public void update(double angVel, double angAccel, double voltageCompensation) {
-        update(angVel,angAccel,voltageCompensation, true);
+    public double getTargetDeg() {
+        return targetDeg;
     }
-    public void update(double angVel, double angAccel, double voltageCompensation, boolean usePid) {
-        previousAngle = curAngle;
-        previousTime = curTime;
-        curTime = System.nanoTime() * 1e-9;
-        curAngle = getAngle();
 
-        if (Math.abs(curAngle - turretPID.getTargetPosition()) < 0.75) {
-            turretPID.updateFeedForwardInput(0);
-        } else if (curAngle > turretPID.getTargetPosition()) {
-            if (curAngle < 90) {
-                turretPID.updateFeedForwardInput(Constants.Turret.CableCW_F);
-            } else {
-                turretPID.updateFeedForwardInput(Constants.Turret.CCW_F);
-            }
-        } else {
-            turretPID.updateFeedForwardInput(Constants.Turret.CW_F);
+    /** Run once per loop, after the pose is up to date. */
+    public void update() {
+        double error = targetDeg - getAngleDeg();
+
+        if (Math.abs(error) < Constants.Turret.TOLERANCE_DEG) {
+            motor.setPower(0);
+            return;
         }
 
-        turretPID.updatePosition(curAngle);  // degrees
-        if (usePid) {
-            turretPID.setCoefficients(Constants.Turret.turretPID);
-            double kV = Constants.Turret.kV;
-            if (curAngle > 245) {
-                if (angVel > 0) {
-                    kV += Constants.Turret.Cable_kV;
-                }
-                if (turretPID.getError() < 0) {
-                    double kP = Constants.Turret.P + Constants.Turret.Cable_kP;
-                    turretPID.setP(kP);
-                }
-            }
-            double velocityFF = angVel * kV;
-            double accelerationFF = angAccel * Constants.Turret.kA;
-            setPower((( turretPID.run() + velocityFF * voltageCompensation) + accelerationFF));
-        } else {
-            setPower(0);
-        }
+        double power = Constants.Turret.KP * error + Math.signum(error) * Constants.Turret.KS;
+        motor.setPower(clamp(power, -Constants.Turret.MAX_POWER, Constants.Turret.MAX_POWER));
     }
 
-    // deg / sec
-    public double getVelocity() {
-        return (curAngle - previousAngle) / (curTime - previousTime);
+    public boolean atTarget() {
+        return Math.abs(targetDeg - getAngleDeg()) <= Constants.Turret.TOLERANCE_DEG;
     }
 
-    public void setPower(double set) {
-        turretServo1.setPower(set);
-        turretServo2.setPower(set);
+    /**
+     * Aims at a field position. The turret angle is relative to the robot, so the
+     * robot's heading is subtracted from the field angle to the target.
+     */
+    public void aimAt(Pose robotPose, Pose targetPose) {
+        double dx = targetPose.x() - robotPose.x();
+        double dy = targetPose.y() - robotPose.y();
+        double fieldAngleDeg = Math.toDegrees(Math.atan2(dy, dx));
+        double robotHeadingDeg = Math.toDegrees(robotPose.heading());
+        setTargetDeg(fieldAngleDeg - robotHeadingDeg);
     }
-
-    // Converts raw encoder ticks to turret angle
-    public double ticksToDegrees(double ticks) {
-        double motorRevs = ticks / (double) TICKS_PER_REV;
-        double turretRevs = motorRevs / GEAR_RATIO;
-        return turretRevs * 360.0;
-    }
-
-    // Degrees
-    public double getAngle() {
-        return ticksToDegrees(getTicks());
-    }
-    public int getTicks() {
-        return encoder.getCurrentPosition() + encoderOffset;
-    }
-    public boolean closeEnoughToTarget(Pose robotPose) {
-        return robotPose.distanceFrom(goalPose) * Math.sin(Math.toRadians(Math.abs(turretPID.getError()/4))) <= Constants.Turret.closeEnough;
-}
 
     public void stop() {
-        turretServo1.setPower(0);
-        turretServo2.setPower(0);
+        motor.setPower(0);
+    }
+
+    private static double clamp(double v, double lo, double hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 }

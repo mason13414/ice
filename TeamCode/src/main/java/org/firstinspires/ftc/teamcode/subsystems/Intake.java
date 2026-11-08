@@ -1,114 +1,44 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.Constants;
 
+/**
+ * The intake is now a single motor. Last season's intake also had a CR servo and a
+ * beam-break sensor; both are gone, so the code for them was dropped rather than
+ * left behind to confuse whoever reads this next season.
+ */
 public class Intake {
-    // declaring motor variables
 
-    DcMotorEx intakeMotor;
-    CRServo intakeServo;
-    DigitalChannel beamBreak;
-    double lastMotorPower = 0;
-    double lastServoPower = 0;
-    boolean climbed = false;
+    private final DcMotorEx motor;
+    private final DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD; // TODO: confirm on the robot
 
     public Intake(HardwareMap hardwareMap) {
-        intakeMotor = hardwareMap.get(DcMotorEx.class, "intake");
-        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        intakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        intakeMotor.setCurrentAlert(3, CurrentUnit.AMPS);
-
-        beamBreak = hardwareMap.get(DigitalChannel.class, "intakeSensor");
-        beamBreak.setMode(DigitalChannel.Mode.INPUT);
-
-        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
+        motor = hardwareMap.get(DcMotorEx.class, "intake");
+        motor.setDirection(direction);
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    public void intakeMotor(boolean set) {
-        setIntakeMotorPower(set ? Constants.Intake.intakeMotorPower : Constants.Intake.intakeMotorOffPower);
-    }
-    public void spitMotor() {
-        setIntakeMotorPower(Constants.Intake.spitMotorPower);
-    }
-    public void intakeServo(boolean set) {
-        setIntakeServoPower(set ? Constants.Intake.intakeServoPower : Constants.Intake.intakeServoOffPower);
-    }
-    public void spitServo() {
-        setIntakeServoPower(Constants.Intake.spitServoPower);
-    }
-    public boolean isBeamBroken() {
-        return !beamBreak.getState();
+    /** Runs the intake inward. */
+    public void run() {
+        motor.setPower(Constants.Intake.INTAKE_POWER);
     }
 
-    boolean superSlowOnce = true;
-    public void setIntakeMotorPower(double set) {
-        if (0.15 > set && set > Constants.Intake.intakeMotorOffPower /2.0) {
-            if (!superSlowOnce) {
-                superSlowOnce = true;
-                set = 0;
-            }
-        } else {
-            superSlowOnce = false;
-        }
-        if (lastMotorPower != set) {
-            lastMotorPower = set;
-            intakeMotor.setPower(set);
-        }
+    /** Runs it backwards to clear a jam. */
+    public void spit() {
+        motor.setPower(Constants.Intake.SPIT_POWER);
     }
 
-    public void setIntakeServoPower(double set) {
-        if (lastServoPower != set) {
-            lastServoPower = set;
-            intakeServo.setPower(set);
-        }
-    }
-
-    public void climb(boolean climbed) {
-        this.climbed = climbed;
-    }
-
-    public void update(boolean spitIntake, boolean isIntaking, boolean isShooting, boolean forceSpit, boolean allowIntaking, boolean isPlugged, boolean intakeOverride, boolean demo) {
-        if (climbed) {
-            setIntakeServoPower(0);
-            setIntakeMotorPower(0);
-            return;
-        }
-        if (isPlugged && isBeamBroken()) {
-            setIntakeMotorPower(Constants.Intake.intakeMotorPluggedPower);
-            setIntakeServoPower(0);
-        } else if (spitIntake || forceSpit) {
-            spitMotor();
-            spitServo();
-        } else if ((isIntaking && allowIntaking) || intakeOverride) {
-            intakeMotor(true);
-            intakeServo(true);
-        } else if (isShooting){
-            if (!demo) {
-                setIntakeMotorPower(Constants.Intake.intakeMotorOffPower);
-                intakeServo(true);
-            } else {
-                intakeMotor(false);
-                intakeServo(false);
-            }
-        } else {
-            setIntakeMotorPower(Constants.Intake.intakeMotorLightSpit);
-            intakeServo(false);
-        }
+    public void setPower(double power) {
+        motor.setPower(power);
     }
 
     public void stop() {
-        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        intakeMotor.setPower(0);
+        motor.setPower(0);
     }
 }
-

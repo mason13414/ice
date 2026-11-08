@@ -1,67 +1,53 @@
 package org.firstinspires.ftc.teamcode.util;
 
-import com.qualcomm.robotcore.util.ElapsedTime;
-
+/**
+ * Turns a raw gamepad boolean into useful events.
+ * <p>
+ * Ported from last season, but trimmed to the two behaviors the new teleop uses:
+ * a toggle (press flips isOn) and a long press (startPress/endPress while held).
+ */
 public class FancyButton {
 
-    public PressType type;
-
-    public boolean isOn;
-    public boolean isPressed;
-
-    public boolean startPress;
-    public boolean endPress;
-
-    public ElapsedTime time;
-
-    public FancyButton(PressType type){
-        this.type = type;
-        isOn = false;
-        isPressed = false;
-        startPress = false;
-        endPress = false;
-        time = new ElapsedTime();
-    }
-
-    public void checkStatus(boolean pressed){
-        if (startPress) startPress = false;
-        if (endPress) endPress = false;
-
-        // A toggle button and you can see time since it changed from false to true
-        if (type == PressType.Toggle){
-            if (pressed && !isPressed){
-                if (!isOn){
-                    startPress = true;
-                    isOn = true;
-                    time.reset();
-                }else {
-                    endPress = true;
-                    isOn = false;
-                }
-            }
-        }
-        // Just a regular button but you can see time since start press
-        else if (type == PressType.LongPress) {
-            if (pressed && !isPressed){
-                startPress = true;
-                isOn = true;
-                time.reset();
-            }
-            else if (!pressed && isPressed) {
-                endPress = true;
-                isOn = false;
-            }
-        }
-
-        isPressed = pressed;
-    }
-
-    public void resetTimer() {
-        time.reset();
-    }
-
-    public enum PressType{
+    public enum PressType {
         Toggle,
         LongPress
+    }
+
+    private final PressType pressType;
+
+    /** True while the button is toggled on (Toggle) or currently held (LongPress). */
+    public boolean isOn = false;
+    /** True for one loop when the button goes down. */
+    public boolean startPress = false;
+    /** True for one loop when the button comes back up. */
+    public boolean endPress = false;
+    /** True while the button is down. */
+    public boolean isPressed = false;
+
+    private boolean lastState = false;
+
+    public FancyButton(PressType pressType) {
+        this.pressType = pressType;
+    }
+
+    /**
+     * Call this exactly once per loop with the current button state.
+     * The work happens on the rising edge only, so the caller can read the flags
+     * for the rest of the loop.
+     */
+    public void checkStatus(boolean pressed) {
+        startPress = pressed && !lastState;
+        endPress = !pressed && lastState;
+        isPressed = pressed;
+
+        if (pressType == PressType.Toggle) {
+            if (startPress) {
+                isOn = !isOn;
+            }
+        } else {
+            isOn = pressed;
+        }
+
+        lastState = pressed;
     }
 }
